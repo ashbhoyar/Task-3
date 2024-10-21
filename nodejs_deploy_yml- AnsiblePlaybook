@@ -52,3 +52,5 @@
       args:
         chdir: /var/www/nodeapp
         creates: /var/www/nodeapp/app.js
+
+sudo ansible-playbook nodejs_deploy_yml
