@@ -1,0 +1,54 @@
+---
+- name: Simple Node.js Application Deployment
+  hosts: localhost
+  become: yes
+
+  tasks:
+    - name: Install Nginx, Git, and Node.js
+      apt:
+        name:
+          - nginx
+          - git
+          - nodejs
+          - npm
+        update_cache: yes
+        state: present
+
+    - name: Clone the Node.js application from GitHub
+      git:
+        repo: "https://github.com/ashbhoyar/Task-1.git"
+        dest: /var/www/nodeapp
+        version: main
+
+    - name: Install npm dependencies
+      command: npm install
+      args:
+        chdir: /var/www/nodeapp
+
+    - name: Configure Nginx for Node.js
+      copy:
+        dest: /etc/nginx/sites-available/default
+        content: |
+          server {
+              listen 80;
+              server_name _;
+              location / {
+                  proxy_pass http://localhost:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_cache_bypass $http_upgrade;
+              }
+          }
+
+    - name: Restart Nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: Start the Node.js application
+      command: npm start
+      args:
+        chdir: /var/www/nodeapp
+        creates: /var/www/nodeapp/app.js
